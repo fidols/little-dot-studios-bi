@@ -204,6 +204,7 @@ def monthly_financials_trend(
         )
         .reset_index()
         .sort_values("month")
+        .reset_index(drop=True)
     )
 
 
@@ -212,6 +213,7 @@ def margin_by_tier(project_df: pd.DataFrame, client_df: pd.DataFrame) -> pd.Data
     Average project margin % by client tier (Platinum / Gold / Silver).
     Returns DataFrame with columns: tier, avg_margin_pct.
     """
+    # Assumes all project client_ids are present in client_df (internal projects excluded at call site)
     merged = project_df.merge(client_df[["client_id", "tier"]], on="client_id", how="left")
     merged["margin"] = (merged["revenue"] - merged["actual_cost"]) / merged["revenue"].replace(0, float("nan"))
     return (
@@ -255,6 +257,11 @@ def pricing_estimate(
         total_cost: int
         comparable_count: int — past projects with same type and similar hours
     """
+    if seniority_mix not in SENIORITY_MIXES:
+        raise ValueError(
+            f"Unknown seniority_mix {seniority_mix!r}. "
+            f"Valid options: {list(SENIORITY_MIXES.keys())}"
+        )
     mix = SENIORITY_MIXES[seniority_mix]
     total_hours = weeks * team_size * _BILLABLE_HOURS_PER_PERSON_PER_WEEK
     hours_breakdown = {}
@@ -263,6 +270,7 @@ def pricing_estimate(
         role_hours = round(total_hours * share)
         hours_breakdown[role] = role_hours
         total_cost += role_hours * _LOADED_COST_RATES[role]
+    total_hours = sum(hours_breakdown.values())  # recalculate from rounded breakdown
     comparable = project_df[
         (project_df["project_type"] == project_type)
         & (project_df["actual_hours"].between(total_hours * 0.5, total_hours * 2.0))
