@@ -1,0 +1,218 @@
+import pandas as pd
+import pytest
+from datetime import date, timedelta
+from utils.metrics import (
+    utilization_rate,
+    budget_variance_df,
+    gross_margin_pct,
+    avg_project_margin_pct,
+    renewal_rate,
+    pipeline_value,
+    revenue_by_stream,
+)
+
+
+def _make_timelogs(billable_hours, total_hours):
+    """Helper: one employee, one project, one day."""
+    rows = []
+    for i, (bh, th) in enumerate(zip(billable_hours, total_hours)):
+        rows.append({
+            "log_id": f"LOG{i:04d}",
+            "employee_id": "EMP0001",
+            "project_id": "PRJ0001",
+            "date": date(2026, 1, i + 1),
+            "hours": bh,
+            "billable": True,
+            "department": "Production",
+        })
+        if th > bh:
+            rows.append({
+                "log_id": f"LOG{i:04d}X",
+                "employee_id": "EMP0001",
+                "project_id": "PRJ0001",
+                "date": date(2026, 1, i + 1),
+                "hours": th - bh,
+                "billable": False,
+                "department": "Production",
+            })
+    return pd.DataFrame(rows)
+
+
+def _make_employees(n=1, office="UK"):
+    return pd.DataFrame([{
+        "employee_id": f"EMP{i:04d}",
+        "name": f"Employee {i}",
+        "department": "Production",
+        "office": office,
+        "role": "Mid",
+        "loaded_cost_rate": 75,
+    } for i in range(1, n + 1)])
+
+
+def _make_projects(revenues, costs, estimated_hours, actual_hours, statuses=None):
+    rows = []
+    for i, (r, c, eh, ah) in enumerate(zip(revenues, costs, estimated_hours, actual_hours)):
+        rows.append({
+            "project_id": f"PRJ{i:04d}",
+            "project_name": f"Project {i}",
+            "client_id": "CLT001",
+            "project_type": "Retainer",
+            "office": "UK",
+            "department": "Production",
+            "start_date": date(2026, 1, 1),
+            "end_date": date(2026, 3, 31),
+            "estimated_hours": eh,
+            "actual_hours": ah,
+            "budget": c * 1.1,
+            "actual_cost": c,
+            "revenue": r,
+            "status": statuses[i] if statuses else "On Track",
+        })
+    return pd.DataFrame(rows)
+
+
+# --- utilization_rate ---
+
+def test_utilization_rate_basic():
+    # 1 employee, 20 billable hours out of 40 available = 50%
+    timelogs = _make_timelogs([8, 8, 4], [8, 8, 8])
+    # billable = 8+8+4 = 20, total = 8+8+8 = 24
+    employees = _make_employees(1)
+    result = utilization_rate(timelogs, employees)
+    assert abs(result - 20 / 24) < 0.01
+
+
+def test_utilization_rate_all_billable():
+    timelogs = _make_timelogs([8, 8], [8, 8])
+    employees = _make_employees(1)
+    result = utilization_rate(timelogs, employees)
+    assert abs(result - 1.0) < 0.01
+
+
+def test_utilization_rate_zero_logs():
+    timelogs = pd.DataFrame(columns=[
+        "log_id", "employee_id", "project_id", "date", "hours", "billable", "department"
+    ])
+    employees = _make_employees(1)
+    result = utilization_rate(timelogs, employees)
+    assert result == 0.0
+
+
+# --- budget_variance_df ---
+
+def test_budget_variance_on_track():
+    df = _make_projects([100], [60], [100], [70])
+    result = budget_variance_df(df)
+    assert result.iloc[0]["pct_burned"] == pytest.approx(0.70)
+    assert result.iloc[0]["status"] == "On Track"
+
+
+def test_budget_variance_at_risk():
+    df = _make_projects([100], [60], [100], [90])
+    result = budget_variance_df(df)
+    assert result.iloc[0]["status"] == "At Risk"
+
+
+def test_budget_variance_over_budget():
+    df = _make_projects([100], [60], [100], [110])
+    result = budget_variance_df(df)
+    assert result.iloc[0]["status"] == "Over Budget"
+    assert result.iloc[0]["hours_over"] == 10
+
+
+# --- gross_margin_pct ---
+
+def test_gross_margin_pct_correct():
+    # revenue=200, cost=120 → margin = 40%
+    df = _make_projects([100, 100], [60, 60], [100, 100], [80, 80])
+    result = gross_margin_pct(df)
+    assert abs(result - 0.40) < 0.001
+
+
+def test_gross_margin_pct_zero_revenue():
+    df = _make_projects([0], [0], [100], [80])
+    result = gross_margin_pct(df)
+    assert result == 0.0
+
+
+# --- avg_project_margin_pct ---
+
+def test_avg_project_margin_pct_correct():
+    # Project 1: (100-60)/100=40%, Project 2: (200-80)/200=60% → avg=50%
+    df = _make_projects([100, 200], [60, 80], [100, 100], [80, 80])
+    result = avg_project_margin_pct(df)
+    assert abs(result - 0.50) < 0.001
+
+
+# --- renewal_rate ---
+
+def test_renewal_rate_correct():
+    df = pd.DataFrame({
+        "client_id": ["C1", "C2", "C3", "C4", "C5"],
+        "status": ["Active", "Active", "Active", "Churned", "At Risk"],
+    })
+    result = renewal_rate(df)
+    # Active + At Risk = 4, Churned = 1 → 4/5 = 80%
+    assert abs(result - 0.80) < 0.01
+
+
+def test_renewal_rate_all_active():
+    df = pd.DataFrame({
+        "client_id": ["C1", "C2"],
+        "status": ["Active", "Active"],
+    })
+    assert renewal_rate(df) == 1.0
+
+
+# --- pipeline_value ---
+
+def test_pipeline_value_excludes_closed():
+    df = pd.DataFrame({
+        "deal_id": ["D1", "D2", "D3"],
+        "stage": ["Prospecting", "Closed Won", "Closed Lost"],
+        "value": [100_000, 200_000, 50_000],
+        "probability": [0.10, 1.0, 0.0],
+    })
+    result = pipeline_value(df)
+    # Only Prospecting is open: 100_000
+    assert result == 100_000
+
+
+def test_pipeline_value_all_open():
+    df = pd.DataFrame({
+        "deal_id": ["D1", "D2"],
+        "stage": ["Proposal", "Negotiation"],
+        "value": [100_000, 200_000],
+        "probability": [0.30, 0.60],
+    })
+    result = pipeline_value(df)
+    assert result == 300_000
+
+
+# --- revenue_by_stream ---
+
+def test_revenue_by_stream_sums_correctly():
+    df = pd.DataFrame({
+        "month": ["2026-01-01", "2026-01-01", "2026-02-01"],
+        "office": ["UK", "US", "UK"],
+        "revenue_stream": ["Ad Revenue", "Ad Revenue", "Agency Retainers"],
+        "revenue": [1000, 500, 800],
+        "direct_cost": [200, 100, 160],
+        "labor_cost": [300, 150, 240],
+    })
+    result = revenue_by_stream(df)
+    assert result.loc[result["revenue_stream"] == "Ad Revenue", "revenue"].values[0] == 1500
+    assert result.loc[result["revenue_stream"] == "Agency Retainers", "revenue"].values[0] == 800
+
+
+def test_revenue_by_stream_filters_by_office():
+    df = pd.DataFrame({
+        "month": ["2026-01-01", "2026-01-01"],
+        "office": ["UK", "US"],
+        "revenue_stream": ["Ad Revenue", "Ad Revenue"],
+        "revenue": [1000, 500],
+        "direct_cost": [200, 100],
+        "labor_cost": [300, 150],
+    })
+    result = revenue_by_stream(df, offices=["UK"])
+    assert result.loc[result["revenue_stream"] == "Ad Revenue", "revenue"].values[0] == 1000
