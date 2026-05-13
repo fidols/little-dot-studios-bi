@@ -1,0 +1,21 @@
+channel_id,channel_name,subscribers,total_views,video_count,category
+CH001,Formula Classics,8500000,2100000000,180,Sports
+CH002,McLaren Moments,4200000,820000000,95,Sports
+CH003,Olympic Highlights,12000000,2800000000,220,Sports
+CH004,Premier Motorsport,3100000,650000000,110,Sports
+CH005,Speed & Style,2400000,430000000,88,Auto & Transport
+CH006,Auto Reviews UK,1800000,310000000,76,Auto & Transport
+CH007,History Vault,6200000,1400000000,410,Documentary
+CH008,Science Unlocked,3800000,760000000,290,Documentary
+CH009,World Documentaries,2100000,490000000,160,Documentary
+CH010,Daily Entertainment,18500000,4200000000,520,Entertainment
+CH011,Pop Culture Weekly,9300000,2100000000,380,Entertainment
+CH012,Classic Cinema,4600000,980000000,240,Entertainment
+CH013,Comedy Central UK,7200000,1600000000,310,Entertainment
+CH014,Travel & Lifestyle,3400000,640000000,195,Lifestyle
+CH015,Food & Travel,2900000,510000000,175,Lifestyle
+CH016,Outdoor Adventures,1500000,270000000,90,Lifestyle
+CH017,Business Insider UK,5100000,1200000000,480,News
+CH018,Sports Highlights,6800000,1500000000,260,Sports
+CH019,Gaming World,4100000,940000000,820,Sports & Gaming
+CH020,Tech Today,2800000,590000000,210,Technology
