@@ -1,7 +1,14 @@
 # Little Dot Studios
 
 ## Overview
-Little Dot Studios (LDS) is a multi-platform production company, social media agency, and digital media network founded in 2013. Headquartered in the UK with offices in the US (Los Angeles), Germany, and ANZ. Part of All3Media group. ~80 employees. Verified carbon neutral since inception, targeting net-zero by 2030.
+Little Dot Studios (LDS) is a multi-platform production company, social media agency, and digital media network founded in 2013. Headquartered in the UK with offices in the US (Los Angeles), Germany, and ANZ. Part of All3Media group. ~419 employees across 4 continents (March 2026). Verified carbon neutral since inception, targeting net-zero by 2030.
+
+## Scale (confirmed)
+- **Revenue:** $257.7M
+- **Employees:** ~419 (March 2026)
+- **Views:** 11 billion organic views/month
+- **Channels:** 1,000+ digital channels managed globally
+- **Content ID:** $100M+ in passive revenue generated for partners over 3 years
 
 ## Products & Capabilities
 
@@ -25,8 +32,11 @@ Little Dot Studios (LDS) is a multi-platform production company, social media ag
 - **WING** — sport and branded content production agency
 - **History Hit** — Dan Snow's podcast network and SVOD service
 
-## Clients
-Works with major TV and movie studios, distributors, rights holders, sports federations, and brands. Specific clients not publicly disclosed in detail.
+## Clients (confirmed)
+- **Studios:** Warner Bros., Disney, NBCUniversal
+- **Content partners:** ZDF Studios (1,000+ hours licensed), Cineverse
+- **Podcast:** Acast UK (20+ shows on YouTube from Jan 2026)
+- **WING sports/brand clients:** IOC, Formula 1, America's Cup, Coca-Cola, Hugo Boss, McLaren, Vodafone, Land Rover
 
 ## Business Model
 Revenue streams include:
@@ -44,4 +54,10 @@ The Commercial Planning team sits at the intersection of all these business line
 - [YouTube Ecosystem](industry-youtube-ecosystem.md)
 - [Digital Media Landscape](industry-digital-media-landscape.md)
 
-> 📌 **Gap:** Specific client names, revenue figures, and team structure are not publicly available. Research earnings/press releases to fill in.
+## Recent Developments (2026)
+- Jan 2026: Two Co-MDs appointed for LDS US — US expansion is a stated priority
+- Feb 2026: New C-suite created: CCO, CMO, Interim CIO
+- Mar 2026: ZDF Studios partnership renewed and expanded
+- May 2026: New in-house podcast/video studio built at London HQ for History Hit
+
+> 📌 **Gap:** Specific team structure in LA office and how Commercial Planning fits into org chart is not public.
