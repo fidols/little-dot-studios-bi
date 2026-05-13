@@ -1,6 +1,12 @@
 import pandas as pd
 import pytest
-from data.simulate import generate_employees, generate_clients
+from data.simulate import (
+    generate_employees,
+    generate_clients,
+    generate_projects,
+    generate_pipeline,
+    ANNUAL_REVENUE,
+)
 
 
 # --- Employees ---
@@ -71,8 +77,6 @@ def test_clients_status_valid():
     assert set(df["status"].unique()).issubset({"Active", "At Risk", "Churned"})
 
 
-from data.simulate import generate_projects, generate_pipeline, ANNUAL_REVENUE
-
 
 # --- Projects ---
 
@@ -96,6 +100,8 @@ def test_projects_revenue_calibration():
     df = generate_projects()
     total = df["revenue"].sum()
     assert 0.85 * ANNUAL_REVENUE <= total <= 1.15 * ANNUAL_REVENUE
+    assert (df["revenue"] > 0).all()
+    assert df["revenue"].max() < ANNUAL_REVENUE * 0.05
 
 
 def test_projects_project_types_valid():
