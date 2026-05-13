@@ -64,7 +64,6 @@ st.subheader("Revenue vs Cost Over Time")
 st.caption("The gap between revenue and combined costs = gross margin. Narrowing gap = margin compression.")
 
 trend_df = monthly_financials_trend(financials_filtered)
-trend_df["total_cost"] = trend_df["direct_cost"] + trend_df["labor_cost"]
 
 melted = trend_df.melt(
     id_vars="month",
