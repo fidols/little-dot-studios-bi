@@ -158,3 +158,68 @@ def test_pipeline_count():
 def test_pipeline_no_nulls():
     df = generate_pipeline()
     assert df.isnull().sum().sum() == 0
+
+
+from data.simulate import generate_timelogs, generate_financials
+
+
+# --- Time logs ---
+
+def test_timelogs_columns():
+    df = generate_timelogs()
+    assert list(df.columns) == [
+        "log_id", "employee_id", "project_id", "date", "hours", "billable", "department"
+    ]
+
+
+def test_timelogs_hours_positive():
+    df = generate_timelogs()
+    assert (df["hours"] > 0).all()
+
+
+def test_timelogs_hours_max_per_day():
+    # No single log entry should exceed 12 hours
+    df = generate_timelogs()
+    assert (df["hours"] <= 12).all()
+
+
+def test_timelogs_billable_is_bool():
+    df = generate_timelogs()
+    assert df["billable"].dtype == bool
+
+
+def test_timelogs_no_nulls():
+    df = generate_timelogs()
+    assert df.isnull().sum().sum() == 0
+
+
+# --- Financials ---
+
+def test_financials_columns():
+    df = generate_financials()
+    assert list(df.columns) == [
+        "month", "office", "revenue_stream", "revenue", "direct_cost", "labor_cost"
+    ]
+
+
+def test_financials_annual_revenue_calibration():
+    df = generate_financials()
+    total = df["revenue"].sum()
+    assert 0.90 * ANNUAL_REVENUE <= total <= 1.10 * ANNUAL_REVENUE
+
+
+def test_financials_revenue_streams_valid():
+    df = generate_financials()
+    valid = {"Ad Revenue", "Agency Retainers", "Content Licensing", "Content ID", "Production Fees"}
+    assert set(df["revenue_stream"].unique()).issubset(valid)
+
+
+def test_financials_no_negative_revenue():
+    df = generate_financials()
+    assert (df["revenue"] >= 0).all()
+
+
+def test_financials_months_count():
+    # Should have 12 months of data
+    df = generate_financials()
+    assert df["month"].nunique() == 12

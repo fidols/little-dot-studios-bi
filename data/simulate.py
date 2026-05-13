@@ -205,3 +205,79 @@ def generate_pipeline() -> pd.DataFrame:
             })
             deal_id += 1
     return pd.DataFrame(rows)
+
+
+def generate_timelogs() -> pd.DataFrame:
+    """Generate daily time log entries for all employees over 12 months."""
+    rng = np.random.default_rng(SEED + 4)
+    employees = generate_employees()
+    projects = generate_projects()
+    project_ids = projects["project_id"].tolist()
+
+    rows = []
+    log_id = 1
+    # Sample 15–45 logs per employee
+    for _, emp in employees.iterrows():
+        n_logs = int(rng.integers(15, 45))
+        days_back = rng.integers(1, 365, size=n_logs)
+        hours_arr = rng.uniform(1, 8, size=n_logs).round(1)
+        billable_arr = rng.random(size=n_logs) < 0.72  # 72% billable rate
+        proj_arr = rng.choice(project_ids, size=n_logs)
+        for i in range(n_logs):
+            rows.append({
+                "log_id": f"LOG{log_id:07d}",
+                "employee_id": emp["employee_id"],
+                "project_id": proj_arr[i],
+                "date": TODAY - timedelta(days=int(days_back[i])),
+                "hours": float(hours_arr[i]),
+                "billable": bool(billable_arr[i]),
+                "department": emp["department"],
+            })
+            log_id += 1
+    return pd.DataFrame(rows)
+
+
+def generate_financials() -> pd.DataFrame:
+    """Generate monthly revenue, direct cost, and labor cost by office and stream."""
+    rng = np.random.default_rng(SEED + 5)
+    revenue_streams = ["Ad Revenue", "Agency Retainers", "Content Licensing", "Content ID", "Production Fees"]
+    stream_share = {
+        "Ad Revenue": 0.40,
+        "Agency Retainers": 0.25,
+        "Content Licensing": 0.15,
+        "Content ID": 0.10,
+        "Production Fees": 0.10,
+    }
+    office_share = {"UK": 0.52, "US": 0.22, "Germany": 0.16, "ANZ": 0.10}
+
+    rows = []
+    months = pd.date_range(end=TODAY, periods=12, freq="MS")
+    for month in months:
+        for office, o_share in office_share.items():
+            for stream, s_share in stream_share.items():
+                base = ANNUAL_REVENUE / 12 * o_share * s_share
+                noise = rng.uniform(0.85, 1.15)
+                revenue = round(base * noise, 2)
+                direct_cost = round(revenue * rng.uniform(0.20, 0.35), 2)
+                labor_cost = round(revenue * rng.uniform(0.25, 0.40), 2)
+                rows.append({
+                    "month": month.date(),
+                    "office": office,
+                    "revenue_stream": stream,
+                    "revenue": revenue,
+                    "direct_cost": direct_cost,
+                    "labor_cost": labor_cost,
+                })
+    return pd.DataFrame(rows)
+
+
+def generate_all() -> dict:
+    """Generate all DataFrames. Call once and cache."""
+    return {
+        "employee_df": generate_employees(),
+        "client_df": generate_clients(),
+        "project_df": generate_projects(),
+        "timelog_df": generate_timelogs(),
+        "pipeline_df": generate_pipeline(),
+        "financials_df": generate_financials(),
+    }
