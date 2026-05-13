@@ -66,9 +66,10 @@ selected_offices = st.multiselect(
     options=["UK", "US", "Germany", "ANZ"],
     default=st.session_state["selected_offices"],
 )
-if selected_offices:
-    st.session_state["selected_offices"] = selected_offices
-offices = st.session_state["selected_offices"]
+st.session_state["selected_offices"] = selected_offices
+offices = selected_offices if selected_offices else ["UK", "US", "Germany", "ANZ"]
+if not selected_offices:
+    st.info("No offices selected — showing all offices.")
 
 st.divider()
 
