@@ -11,14 +11,16 @@ from utils.metrics import (
     revenue_at_risk,
 )
 
+_ENGAGEMENT_HIGH_RISK_THRESHOLD = 50   # below this = high risk
+_ENGAGEMENT_MED_RISK_THRESHOLD = 70    # below this = medium risk
+_ENGAGEMENT_QUADRANT_MID = 65          # scatter plot horizontal divider
+
 # ── Session state guard ───────────────────────────────────────────────────────
 if "data" not in st.session_state:
     st.warning("Please start from the Overview page to load data.")
     st.stop()
 
 data = st.session_state["data"]
-offices = st.session_state.get("selected_offices", ["UK", "US", "Germany", "ANZ"])
-
 client_df = data["client_df"]
 pipeline_df = data["pipeline_df"]
 project_df = data["project_df"]
@@ -69,7 +71,7 @@ fig_scatter = px.scatter(
 
 # Quadrant lines at median values
 rev_mid = client_df["annual_revenue"].median()
-eng_mid = 65
+eng_mid = _ENGAGEMENT_QUADRANT_MID
 
 fig_scatter.add_vline(x=rev_mid, line_dash="dot", line_color="#6D6E71")
 fig_scatter.add_hline(y=eng_mid, line_dash="dot", line_color="#6D6E71")
@@ -189,7 +191,7 @@ if len(expiring) == 0:
     st.success("No contracts expiring in the next 90 days.")
 else:
     for _, row in expiring.sort_values("renewal_date").iterrows():
-        risk_level = "high" if row["engagement_score"] < 50 else "medium" if row["engagement_score"] < 70 else "low"
+        risk_level = "high" if row["engagement_score"] < _ENGAGEMENT_HIGH_RISK_THRESHOLD else "medium" if row["engagement_score"] < _ENGAGEMENT_MED_RISK_THRESHOLD else "low"
         revenue_m = row["annual_revenue"] / 1_000_000
         msg = (
             f"**{row['client_name']}** ({row['tier']}) — "
