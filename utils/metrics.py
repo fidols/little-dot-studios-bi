@@ -73,3 +73,70 @@ def revenue_by_stream(
         .agg(revenue=("revenue", "sum"), direct_cost=("direct_cost", "sum"), labor_cost=("labor_cost", "sum"))
         .reset_index()
     )
+
+
+def billable_hours_this_month(timelog_df: pd.DataFrame, today) -> float:
+    """Total billable hours logged in the same calendar month as today."""
+    if timelog_df.empty:
+        return 0.0
+    df = timelog_df.copy()
+    df["_date"] = pd.to_datetime(df["date"])
+    mask = (
+        (df["_date"].dt.year == today.year)
+        & (df["_date"].dt.month == today.month)
+        & df["billable"]
+    )
+    return float(df.loc[mask, "hours"].sum())
+
+
+def utilization_by_dept(timelog_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Utilization rate (billable / total hours) per department.
+    Returns DataFrame with columns: department, utilization_rate.
+    Sorted descending by utilization_rate.
+    """
+    if timelog_df.empty:
+        return pd.DataFrame(columns=["department", "utilization_rate"])
+    result = []
+    for dept, group in timelog_df.groupby("department"):
+        total = group["hours"].sum()
+        if total == 0:
+            continue
+        billable = group.loc[group["billable"], "hours"].sum()
+        result.append({"department": dept, "utilization_rate": float(billable / total)})
+    return (
+        pd.DataFrame(result)
+        .sort_values("utilization_rate", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+def monthly_utilization_trend(
+    timelog_df: pd.DataFrame,
+    employee_df: pd.DataFrame,
+    months: int = 12,
+) -> pd.DataFrame:
+    """
+    Monthly utilization rate by office for the last `months` months.
+    Joins timelog with employee_df to get office per employee.
+    Returns DataFrame with columns: month (datetime), office, utilization_rate.
+    """
+    if timelog_df.empty:
+        return pd.DataFrame(columns=["month", "office", "utilization_rate"])
+    df = timelog_df.merge(
+        employee_df[["employee_id", "office"]], on="employee_id", how="left"
+    )
+    df["_date"] = pd.to_datetime(df["date"])
+    df["month"] = df["_date"].dt.to_period("M").dt.to_timestamp()
+    result = []
+    for (month, office), group in df.groupby(["month", "office"]):
+        total = group["hours"].sum()
+        if total == 0:
+            continue
+        billable = group.loc[group["billable"], "hours"].sum()
+        result.append({
+            "month": month,
+            "office": str(office),
+            "utilization_rate": float(billable / total),
+        })
+    return pd.DataFrame(result).sort_values(["month", "office"]).reset_index(drop=True)

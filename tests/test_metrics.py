@@ -216,3 +216,63 @@ def test_revenue_by_stream_filters_by_office():
     })
     result = revenue_by_stream(df, offices=["UK"])
     assert result.loc[result["revenue_stream"] == "Ad Revenue", "revenue"].values[0] == 1000
+
+
+from datetime import date as date_type
+from utils.metrics import billable_hours_this_month, utilization_by_dept, monthly_utilization_trend
+
+
+def _tl(log_id, date_val, hours, billable, dept="Production", emp_id="EMP0001"):
+    return {
+        "log_id": log_id, "employee_id": emp_id, "project_id": "PRJ0001",
+        "date": date_val, "hours": hours, "billable": billable, "department": dept,
+    }
+
+
+def test_billable_hours_this_month_counts_current_month_only():
+    df = pd.DataFrame([
+        _tl("L1", date_type(2026, 5, 1), 8.0, True),
+        _tl("L2", date_type(2026, 4, 30), 8.0, True),  # prior month — must be excluded
+    ])
+    assert billable_hours_this_month(df, date_type(2026, 5, 12)) == 8.0
+
+
+def test_billable_hours_this_month_excludes_non_billable():
+    df = pd.DataFrame([
+        _tl("L1", date_type(2026, 5, 3), 8.0, True),
+        _tl("L2", date_type(2026, 5, 4), 4.0, False),
+    ])
+    assert billable_hours_this_month(df, date_type(2026, 5, 12)) == 8.0
+
+
+def test_utilization_by_dept_basic():
+    df = pd.DataFrame([
+        _tl("L1", date_type(2026, 5, 1), 8.0, True, "Production"),
+        _tl("L2", date_type(2026, 5, 2), 4.0, False, "Production"),  # 8/12 ≈ 66.7%
+        _tl("L3", date_type(2026, 5, 1), 6.0, True, "Strategy", "EMP0002"),  # 100%
+    ])
+    result = utilization_by_dept(df)
+    prod = result[result["department"] == "Production"]["utilization_rate"].values[0]
+    strat = result[result["department"] == "Strategy"]["utilization_rate"].values[0]
+    assert abs(prod - 8 / 12) < 0.01
+    assert abs(strat - 1.0) < 0.01
+
+
+def test_utilization_by_dept_empty_returns_empty():
+    df = pd.DataFrame(columns=["log_id", "employee_id", "project_id", "date", "hours", "billable", "department"])
+    assert len(utilization_by_dept(df)) == 0
+
+
+def test_monthly_utilization_trend_joins_office():
+    timelogs = pd.DataFrame([
+        _tl("L1", date_type(2026, 1, 5), 8.0, True),
+        _tl("L2", date_type(2026, 1, 6), 4.0, False),  # UK Jan: 8/12 ≈ 66.7%
+    ])
+    employees = pd.DataFrame([{
+        "employee_id": "EMP0001", "name": "E1", "department": "Production",
+        "office": "UK", "role": "Mid", "loaded_cost_rate": 75,
+    }])
+    result = monthly_utilization_trend(timelogs, employees)
+    assert len(result) == 1
+    assert result.iloc[0]["office"] == "UK"
+    assert abs(result.iloc[0]["utilization_rate"] - 8 / 12) < 0.01
