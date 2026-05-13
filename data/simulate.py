@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import date, timedelta
 
 SEED = 42
-RNG = np.random.default_rng(SEED)
 
 OFFICES = ["UK", "US", "Germany", "ANZ"]
 OFFICE_HEADCOUNT = {"UK": 220, "US": 90, "Germany": 65, "ANZ": 44}
