@@ -24,3 +24,21 @@ if "selected_offices" not in st.session_state:
 # ── Title ─────────────────────────────────────────────────────────────────────
 st.title("Little Dot Studios — Commercial Planning")
 st.caption("Stakeholders: Commercial Planning · Finance · Executive Leadership")
+
+st.divider()
+
+# ── All3Media Pressure Banner ─────────────────────────────────────────────────
+st.subheader("All3Media Group — Parent Company Pressure")
+st.caption(
+    "Little Dot Studios is a wholly-owned subsidiary of All3Media. "
+    "FY2024 results signal that cost discipline is a business imperative."
+)
+
+a1, a2, a3 = st.columns(3)
+a1.metric("All3Media Group Revenue", "£895.9M")
+a2.metric("FY2024 YoY Change", "-10%", delta="-10%")
+a3.metric("FY2024 Operating Result", "-£30.8M", delta="-£30.8M")
+
+st.caption(
+    "Source: All3Media FY2024 audited financials. First operating loss in recent history."
+)
