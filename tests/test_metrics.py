@@ -276,3 +276,116 @@ def test_monthly_utilization_trend_joins_office():
     assert len(result) == 1
     assert result.iloc[0]["office"] == "UK"
     assert abs(result.iloc[0]["utilization_rate"] - 8 / 12) < 0.01
+
+
+from utils.metrics import (
+    margin_delta_qoq,
+    monthly_financials_trend,
+    margin_by_tier,
+    margin_by_project_type,
+    pricing_estimate,
+)
+
+
+def _make_financials(months_revenue):
+    """months_revenue: list of (month_str, office, stream, revenue, direct_cost, labor_cost)"""
+    rows = []
+    for m, office, stream, rev, dc, lc in months_revenue:
+        rows.append({
+            "month": m, "office": office, "revenue_stream": stream,
+            "revenue": rev, "direct_cost": dc, "labor_cost": lc,
+        })
+    return pd.DataFrame(rows)
+
+
+def test_margin_delta_qoq_positive_trend():
+    # Q1 (Jan-Mar): margin 30%, Q2 (Apr-Jun): margin 40% → delta = +10%
+    rows = []
+    for m, rev, cost in [
+        ("2026-01-01", 100, 70), ("2026-02-01", 100, 70), ("2026-03-01", 100, 70),
+        ("2026-04-01", 100, 60), ("2026-05-01", 100, 60), ("2026-06-01", 100, 60),
+    ]:
+        rows.append({"month": m, "office": "UK", "revenue_stream": "Ad Revenue",
+                     "revenue": rev, "direct_cost": cost / 2, "labor_cost": cost / 2})
+    df = pd.DataFrame(rows)
+    result = margin_delta_qoq(df)
+    assert abs(result - 0.10) < 0.01
+
+
+def test_margin_delta_qoq_insufficient_data_returns_zero():
+    rows = [{"month": "2026-01-01", "office": "UK", "revenue_stream": "Ad Revenue",
+              "revenue": 100, "direct_cost": 30, "labor_cost": 30}]
+    df = pd.DataFrame(rows)
+    assert margin_delta_qoq(df) == 0.0
+
+
+def test_monthly_financials_trend_groups_correctly():
+    df = _make_financials([
+        ("2026-01-01", "UK", "Ad Revenue", 1000, 200, 300),
+        ("2026-01-01", "US", "Ad Revenue", 500, 100, 150),  # same month, different office
+        ("2026-02-01", "UK", "Ad Revenue", 800, 160, 240),
+    ])
+    result = monthly_financials_trend(df)
+    jan = result[result["month"] == pd.Timestamp("2026-01-01")]
+    assert jan["revenue"].values[0] == 1500
+    assert len(result) == 2  # 2 distinct months
+
+
+def test_margin_by_tier_correct():
+    projects = pd.DataFrame([
+        {"project_id": "P1", "client_id": "C1", "revenue": 100, "actual_cost": 60,
+         "project_type": "Retainer", "office": "UK", "project_name": "P1",
+         "department": "Production", "start_date": "2026-01-01", "end_date": "2026-03-31",
+         "estimated_hours": 100, "actual_hours": 80, "budget": 70, "status": "Active"},
+    ])
+    clients = pd.DataFrame([
+        {"client_id": "C1", "client_name": "Acme", "tier": "Platinum",
+         "contract_type": "Retainer", "annual_revenue": 1_000_000, "margin_pct": 0.40,
+         "renewal_date": "2027-01-01", "last_contact_date": "2026-05-01",
+         "engagement_score": 85, "status": "Active"},
+    ])
+    result = margin_by_tier(projects, clients)
+    plat = result[result["tier"] == "Platinum"]["avg_margin_pct"].values[0]
+    assert abs(plat - 0.40) < 0.01
+
+
+def test_margin_by_project_type_correct():
+    projects = pd.DataFrame([
+        {"project_id": "P1", "client_id": "C1", "revenue": 200, "actual_cost": 120,
+         "project_type": "Retainer", "office": "UK", "project_name": "P1",
+         "department": "Production", "start_date": "2026-01-01", "end_date": "2026-03-31",
+         "estimated_hours": 100, "actual_hours": 80, "budget": 130, "status": "Active"},
+        {"project_id": "P2", "client_id": "C1", "revenue": 100, "actual_cost": 80,
+         "project_type": "Production", "office": "UK", "project_name": "P2",
+         "department": "Production", "start_date": "2026-01-01", "end_date": "2026-03-31",
+         "estimated_hours": 80, "actual_hours": 90, "budget": 90, "status": "Active"},
+    ])
+    result = margin_by_project_type(projects)
+    retainer = result[result["project_type"] == "Retainer"]["avg_margin_pct"].values[0]
+    production = result[result["project_type"] == "Production"]["avg_margin_pct"].values[0]
+    assert abs(retainer - 0.40) < 0.01   # (200-120)/200
+    assert abs(production - 0.20) < 0.01  # (100-80)/100
+
+
+def test_pricing_estimate_returns_expected_keys():
+    projects = pd.DataFrame(columns=[
+        "project_id", "project_name", "client_id", "project_type", "office",
+        "department", "start_date", "end_date", "estimated_hours", "actual_hours",
+        "budget", "actual_cost", "revenue", "status",
+    ])
+    result = pricing_estimate("Retainer", weeks=4, team_size=3, seniority_mix="Balanced", project_df=projects)
+    assert "floor_price" in result
+    assert "recommended_price" in result
+    assert "hours_breakdown" in result
+    assert "comparable_count" in result
+
+
+def test_pricing_estimate_floor_below_recommended():
+    projects = pd.DataFrame(columns=[
+        "project_id", "project_name", "client_id", "project_type", "office",
+        "department", "start_date", "end_date", "estimated_hours", "actual_hours",
+        "budget", "actual_cost", "revenue", "status",
+    ])
+    result = pricing_estimate("Production", weeks=8, team_size=4, seniority_mix="Senior-heavy", project_df=projects)
+    assert result["floor_price"] < result["recommended_price"]
+    assert result["total_hours"] > 0

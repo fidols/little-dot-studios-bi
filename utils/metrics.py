@@ -146,3 +146,132 @@ def monthly_utilization_trend(
             "utilization_rate": float(billable / total),
         })
     return pd.DataFrame(result).sort_values(["month", "office"]).reset_index(drop=True)
+
+
+# Pricing tool constants
+SENIORITY_MIXES = {
+    "Junior-heavy": {"Junior": 0.50, "Mid": 0.35, "Senior": 0.10, "Lead": 0.05},
+    "Balanced":     {"Junior": 0.25, "Mid": 0.40, "Senior": 0.25, "Lead": 0.10},
+    "Senior-heavy": {"Junior": 0.10, "Mid": 0.25, "Senior": 0.45, "Lead": 0.20},
+}
+_LOADED_COST_RATES = {"Junior": 45, "Mid": 75, "Senior": 110, "Lead": 140}
+_BILLABLE_HOURS_PER_PERSON_PER_WEEK = 30  # ~75% of 40h week
+_TARGET_MARGIN = 0.30
+_MIN_MARGIN = 0.20
+
+
+def margin_delta_qoq(financials_df: pd.DataFrame, offices: list = None) -> float:
+    """
+    Gross margin delta: current quarter minus prior quarter.
+    Positive = improving. Returns 0.0 if fewer than 6 months of data.
+    Margin = (revenue - direct_cost - labor_cost) / revenue.
+    """
+    df = financials_df if offices is None else financials_df[financials_df["office"].isin(offices)]
+    df = df.copy()
+    df["_month"] = pd.to_datetime(df["month"])
+    months = sorted(df["_month"].dt.to_period("M").unique())
+    if len(months) < 6:
+        return 0.0
+    curr_months = months[-3:]
+    prev_months = months[-6:-3]
+
+    def _qmargin(month_list):
+        mask = df["_month"].dt.to_period("M").isin(month_list)
+        q = df[mask]
+        rev = q["revenue"].sum()
+        cost = q["direct_cost"].sum() + q["labor_cost"].sum()
+        return (rev - cost) / rev if rev > 0 else 0.0
+
+    return float(_qmargin(curr_months) - _qmargin(prev_months))
+
+
+def monthly_financials_trend(
+    financials_df: pd.DataFrame, offices: list = None
+) -> pd.DataFrame:
+    """
+    Monthly totals for revenue, direct_cost, labor_cost.
+    Returns DataFrame sorted by month with columns: month, revenue, direct_cost, labor_cost.
+    """
+    df = financials_df if offices is None else financials_df[financials_df["office"].isin(offices)]
+    df = df.copy()
+    df["month"] = pd.to_datetime(df["month"])
+    return (
+        df.groupby("month")
+        .agg(
+            revenue=("revenue", "sum"),
+            direct_cost=("direct_cost", "sum"),
+            labor_cost=("labor_cost", "sum"),
+        )
+        .reset_index()
+        .sort_values("month")
+    )
+
+
+def margin_by_tier(project_df: pd.DataFrame, client_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Average project margin % by client tier (Platinum / Gold / Silver).
+    Returns DataFrame with columns: tier, avg_margin_pct.
+    """
+    merged = project_df.merge(client_df[["client_id", "tier"]], on="client_id", how="left")
+    merged["margin"] = (merged["revenue"] - merged["actual_cost"]) / merged["revenue"].replace(0, float("nan"))
+    return (
+        merged.groupby("tier")["margin"]
+        .mean()
+        .reset_index()
+        .rename(columns={"margin": "avg_margin_pct"})
+    )
+
+
+def margin_by_project_type(project_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Average project margin % by project type (Retainer / Production / Licensing / Content ID).
+    Returns DataFrame with columns: project_type, avg_margin_pct.
+    """
+    df = project_df.copy()
+    df["margin"] = (df["revenue"] - df["actual_cost"]) / df["revenue"].replace(0, float("nan"))
+    return (
+        df.groupby("project_type")["margin"]
+        .mean()
+        .reset_index()
+        .rename(columns={"margin": "avg_margin_pct"})
+    )
+
+
+def pricing_estimate(
+    project_type: str,
+    weeks: int,
+    team_size: int,
+    seniority_mix: str,
+    project_df: pd.DataFrame,
+) -> dict:
+    """
+    Estimate floor price, recommended price, and hours breakdown for a new project.
+
+    Returns dict:
+        floor_price: cost / (1 - 20% min margin)
+        recommended_price: cost / (1 - 30% target margin)
+        hours_breakdown: {role: hours}
+        total_hours: int
+        total_cost: int
+        comparable_count: int — past projects with same type and similar hours
+    """
+    mix = SENIORITY_MIXES[seniority_mix]
+    total_hours = weeks * team_size * _BILLABLE_HOURS_PER_PERSON_PER_WEEK
+    hours_breakdown = {}
+    total_cost = 0.0
+    for role, share in mix.items():
+        role_hours = round(total_hours * share)
+        hours_breakdown[role] = role_hours
+        total_cost += role_hours * _LOADED_COST_RATES[role]
+    comparable = project_df[
+        (project_df["project_type"] == project_type)
+        & (project_df["actual_hours"].between(total_hours * 0.5, total_hours * 2.0))
+    ]
+    return {
+        "floor_price": round(total_cost / (1 - _MIN_MARGIN)),
+        "recommended_price": round(total_cost / (1 - _TARGET_MARGIN)),
+        "hours_breakdown": hours_breakdown,
+        "total_hours": total_hours,
+        "total_cost": round(total_cost),
+        "comparable_count": len(comparable),
+    }
