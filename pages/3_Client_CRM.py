@@ -89,6 +89,8 @@ fig_scatter.add_annotation(x=rev_mid * 0.3, y=40, text="Deprioritize", showarrow
 fig_scatter.update_layout(
     plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF", font_color="#1A1A1A",
 )
+fig_scatter.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_scatter.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_scatter, use_container_width=True)
 
 st.divider()
@@ -119,10 +121,10 @@ if status_filter:
 
 def _status_color(row):
     if row["Status"] == "Churned":
-        return ["background-color: #fde8e8"] * len(row)
+        return ["background-color: #fde8e8; color: #1A1A1A"] * len(row)
     elif row["Status"] == "At Risk":
-        return ["background-color: #fef9c3"] * len(row)
-    return ["background-color: #d4edda"] * len(row)
+        return ["background-color: #fef9c3; color: #1A1A1A"] * len(row)
+    return ["background-color: #d4edda; color: #1A1A1A"] * len(row)
 
 
 styled = (
@@ -175,6 +177,8 @@ fig_pipe = px.bar(
 fig_pipe.update_layout(
     plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF", font_color="#1A1A1A",
 )
+fig_pipe.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_pipe.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_pipe, use_container_width=True)
 
 st.divider()

@@ -88,6 +88,8 @@ fig_dept.update_layout(
     xaxis_tickformat=".0%",
     xaxis_range=[0, 1.05],
 )
+fig_dept.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_dept.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_dept, use_container_width=True)
 
 st.divider()
@@ -118,6 +120,8 @@ fig_trend.update_layout(
     font_color="#1A1A1A",
     yaxis_tickformat=".0%",
 )
+fig_trend.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_trend.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_trend, use_container_width=True)
 
 st.divider()
@@ -175,9 +179,9 @@ if type_filter:
 
 def _row_color(row):
     if row["Status"] == "Over Budget":
-        return ["background-color: #fde8e8"] * len(row)
+        return ["background-color: #fde8e8; color: #1A1A1A"] * len(row)
     elif row["Status"] == "At Risk":
-        return ["background-color: #fef9c3"] * len(row)
+        return ["background-color: #fef9c3; color: #1A1A1A"] * len(row)
     return [""] * len(row)
 
 

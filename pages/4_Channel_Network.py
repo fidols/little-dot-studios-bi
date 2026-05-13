@@ -89,6 +89,8 @@ fig_growth.update_layout(
     plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF", font_color="#1A1A1A",
     yaxis_tickformat=",",
 )
+fig_growth.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_growth.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_growth, use_container_width=True)
 
 st.divider()
@@ -115,6 +117,8 @@ fig_length.update_layout(
     xaxis_categoryorder="array",
     xaxis_categoryarray=["<10 min", "10-30 min", "30-45 min", "45-60 min", "60+ min"],
 )
+fig_length.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_length.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_length, use_container_width=True)
 
 st.divider()
@@ -130,12 +134,17 @@ fig_donut = px.pie(
     values="total_views",
     hole=0.45,
     color_discrete_sequence=[
-        "#E31837", "#1A1A1A", "#6D6E71", "#94A3B8", "#F59E0B", "#16A34A", "#3B82F6"
+        "#E31837", "#7C3AED", "#6D6E71", "#94A3B8", "#F59E0B", "#16A34A", "#3B82F6"
     ],
 )
 fig_donut.update_layout(
     paper_bgcolor="#FFFFFF",
     font_color="#1A1A1A",
+    legend=dict(font=dict(color="#1A1A1A")),
+)
+fig_donut.update_traces(
+    insidetextfont=dict(color="#FFFFFF"),
+    outsidetextfont=dict(color="#1A1A1A"),
 )
 st.plotly_chart(fig_donut, use_container_width=True)
 

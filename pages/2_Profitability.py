@@ -94,6 +94,8 @@ fig_area.update_layout(
     paper_bgcolor="#FFFFFF",
     font_color="#1A1A1A",
 )
+fig_area.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig_area.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig_area, use_container_width=True)
 
 st.divider()
@@ -121,6 +123,8 @@ with col_left:
         plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF", font_color="#1A1A1A",
         yaxis_tickformat=".0%",
     )
+    fig_tier.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+    fig_tier.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
     st.plotly_chart(fig_tier, use_container_width=True)
 
 # ── Project Type Profitability ─────────────────────────────────────────────────
@@ -141,6 +145,8 @@ with col_right:
         plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF", font_color="#1A1A1A",
         yaxis_tickformat=".0%",
     )
+    fig_type.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+    fig_type.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
     st.plotly_chart(fig_type, use_container_width=True)
 
 st.divider()

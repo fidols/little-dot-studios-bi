@@ -2,7 +2,6 @@ import streamlit as st
 import plotly.express as px
 
 from data.simulate import generate_all
-from utils.metrics import revenue_by_stream
 
 st.set_page_config(
     page_title="Little Dot Studios — Commercial Planning",
@@ -81,14 +80,29 @@ st.caption(
 )
 
 fin_df = data["financials_df"]
-stream_df = revenue_by_stream(fin_df, offices=offices if offices else None)
+active_offices = offices if offices else ["UK", "US", "Germany", "ANZ"]
+stream_df = (
+    fin_df[fin_df["office"].isin(active_offices)]
+    .groupby(["revenue_stream", "office"])
+    .agg(revenue=("revenue", "sum"))
+    .reset_index()
+)
+
+office_colors = {
+    "UK": "#E31837",
+    "US": "#3B82F6",
+    "Germany": "#F59E0B",
+    "ANZ": "#16A34A",
+}
 
 fig = px.bar(
-    stream_df.sort_values("revenue", ascending=False),
+    stream_df,
     x="revenue_stream",
     y="revenue",
-    color_discrete_sequence=["#E31837"],
-    labels={"revenue_stream": "Revenue Stream", "revenue": "Annual Revenue ($)"},
+    color="office",
+    color_discrete_map=office_colors,
+    barmode="group",
+    labels={"revenue_stream": "Revenue Stream", "revenue": "Annual Revenue ($)", "office": "Office"},
 )
 fig.update_layout(
     plot_bgcolor="#FFFFFF",
@@ -98,4 +112,6 @@ fig.update_layout(
     yaxis_title="Annual Revenue ($)",
     margin=dict(t=40, b=40),
 )
+fig.update_xaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
+fig.update_yaxes(tickfont=dict(color="#1A1A1A"), title_font=dict(color="#1A1A1A"))
 st.plotly_chart(fig, use_container_width=True)
