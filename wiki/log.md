@@ -2,6 +2,10 @@
 
 _Append-only. Format: `## [YYYY-MM-DD] <type> | <title>`_
 
+## [2026-05-12] ingest | BI Tools Comparison (improvado.io, dataslayer.ai, domo.com)
+## [2026-05-12] ingest | Production Pricing Models (columnfivemedia.com, wearecovalent.com)
+## [2026-05-12] ingest | All3Media Financials (Variety, Deadline, Yahoo Finance)
+## [2026-05-12] ingest | Time Tracking Benchmarks (getharvest.com, toggl.com, SPI Research 2025)
 ## [2026-05-12] ingest | WING Clients & Work (winglondon.com, deadline.com, rccdbcars.com)
 ## [2026-05-12] ingest | LDS Revenue & Scale (littledotstudios.com, Digiday, ZoomInfo)
 ## [2026-05-12] ingest | LDS Clients & Partnerships (blog.littledotstudios.com, broadbandtvnews, worldscreen)

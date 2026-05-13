@@ -33,6 +33,10 @@ _Updated automatically on every ingest. Read this first when answering queries._
 | [LDS Clients & Partnerships](source-lds-clients-partnerships.md) | Warner Bros., Disney, NBCUniversal, ZDF Studios, Cineverse, Acast, WING sports clients |
 | [LDS News 2026](source-lds-news-2026.md) | US expansion, new C-suite, podcast studio, growth phase signals |
 | [WING Clients & Work](source-wing-clients-work.md) | McLaren, F1, Olympics, IOC — what WING actually produces and why it's operationally complex |
+| [Time Tracking Benchmarks](source-time-tracking-benchmarks.md) | Harvest vs Toggl, utilization rate benchmarks by role, cost of low utilization |
+| [All3Media Financials](source-all3media-financials.md) | Parent company — £896M revenue, -10% in 2024, operating loss, Banijay merger context |
+| [Production Pricing Models](source-production-pricing-models.md) | Retainer vs project vs hourly, video cost benchmarks, how BI supports pricing proposals |
+| [BI Tools Comparison](source-bi-tools-comparison.md) | Tableau vs Looker vs Power BI — differences, pricing, which to prioritize for this role |
 
 ## Synthesis
 _None yet — will be populated as queries and analyses are filed._
