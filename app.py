@@ -56,3 +56,45 @@ st.caption(
     "Sources: ZoomInfo (revenue) · LeadIQ March 2026 (employees) · "
     "LDS Whitepaper 2026 (subscribers, views)"
 )
+
+st.divider()
+
+# ── Office Filter ─────────────────────────────────────────────────────────────
+st.subheader("Office Filter")
+selected_offices = st.multiselect(
+    "Select offices — this filter applies to all pages:",
+    options=["UK", "US", "Germany", "ANZ"],
+    default=st.session_state["selected_offices"],
+)
+if selected_offices:
+    st.session_state["selected_offices"] = selected_offices
+offices = st.session_state["selected_offices"]
+
+st.divider()
+
+# ── Revenue by Stream ─────────────────────────────────────────────────────────
+st.subheader("Revenue by Stream")
+st.caption(
+    "Simulated FY2026 revenue breakdown calibrated to $257.7M total. "
+    "Filtered by selected offices."
+)
+
+fin_df = data["financials_df"]
+stream_df = revenue_by_stream(fin_df, offices=offices if offices else None)
+
+fig = px.bar(
+    stream_df.sort_values("revenue", ascending=False),
+    x="revenue_stream",
+    y="revenue",
+    color_discrete_sequence=["#E31837"],
+    labels={"revenue_stream": "Revenue Stream", "revenue": "Annual Revenue ($)"},
+)
+fig.update_layout(
+    plot_bgcolor="#FFFFFF",
+    paper_bgcolor="#FFFFFF",
+    font_color="#1A1A1A",
+    xaxis_title="Revenue Stream",
+    yaxis_title="Annual Revenue ($)",
+    margin=dict(t=40, b=40),
+)
+st.plotly_chart(fig, use_container_width=True)
