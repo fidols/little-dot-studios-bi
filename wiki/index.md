@@ -37,6 +37,7 @@ _Updated automatically on every ingest. Read this first when answering queries._
 | [All3Media Financials](source-all3media-financials.md) | Parent company — £896M revenue, -10% in 2024, operating loss, Banijay merger context |
 | [Production Pricing Models](source-production-pricing-models.md) | Retainer vs project vs hourly, video cost benchmarks, how BI supports pricing proposals |
 | [BI Tools Comparison](source-bi-tools-comparison.md) | Tableau vs Looker vs Power BI — differences, pricing, which to prioritize for this role |
+| [LDS YouTube Whitepaper 2026](source-lds-youtube-whitepaper-2026.md) | LDS's own published data: 930M subs, 11.2B views/month, video length vs. revenue breakdown, Premium RPM |
 
 ## Synthesis
 _None yet — will be populated as queries and analyses are filed._

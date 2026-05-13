@@ -2,6 +2,7 @@
 
 _Append-only. Format: `## [YYYY-MM-DD] <type> | <title>`_
 
+## [2026-05-12] ingest | LDS YouTube Whitepaper 2026 (tubefilter.com, quasa.io)
 ## [2026-05-12] ingest | BI Tools Comparison (improvado.io, dataslayer.ai, domo.com)
 ## [2026-05-12] ingest | Production Pricing Models (columnfivemedia.com, wearecovalent.com)
 ## [2026-05-12] ingest | All3Media Financials (Variety, Deadline, Yahoo Finance)
