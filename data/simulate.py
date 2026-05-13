@@ -139,10 +139,10 @@ def generate_projects() -> pd.DataFrame:
         days_ago_start = rng.integers(30, 365, size=count)
         duration_days = rng.integers(30, 180, size=count)
         pct_burned = actual_hours_arr / estimated_hours_arr
-        statuses = np.where(
-            pct_burned > 1.0, "Over Budget",
-            np.where(pct_burned > 0.85, "At Risk",
-            np.where(pct_burned > 0.50, "On Track", "Complete"))
+        statuses = rng.choice(
+            ["Active", "Completed", "On Hold"],
+            size=count,
+            p=[0.50, 0.40, 0.10],
         )
 
         for i in range(count):

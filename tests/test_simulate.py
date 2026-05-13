@@ -113,7 +113,7 @@ def test_projects_offices_valid():
 def test_projects_status_valid():
     df = generate_projects()
     assert set(df["status"].unique()).issubset(
-        {"On Track", "At Risk", "Over Budget", "Complete"}
+        {"Active", "Completed", "On Hold"}
     )
 
 
@@ -142,3 +142,13 @@ def test_pipeline_probability_range():
     df = generate_pipeline()
     assert (df["probability"] >= 0).all()
     assert (df["probability"] <= 1).all()
+
+
+def test_pipeline_count():
+    df = generate_pipeline()
+    assert len(df) == 35
+
+
+def test_pipeline_no_nulls():
+    df = generate_pipeline()
+    assert df.isnull().sum().sum() == 0
