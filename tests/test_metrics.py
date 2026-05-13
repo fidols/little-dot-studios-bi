@@ -389,3 +389,50 @@ def test_pricing_estimate_floor_below_recommended():
     result = pricing_estimate("Production", weeks=8, team_size=4, seniority_mix="Senior-heavy", project_df=projects)
     assert result["floor_price"] < result["recommended_price"]
     assert result["total_hours"] > 0
+
+
+from utils.metrics import avg_contract_value, clients_expiring_soon, revenue_at_risk
+
+
+def test_avg_contract_value_basic():
+    df = pd.DataFrame([
+        {"client_id": "C1", "annual_revenue": 1_000_000, "status": "Active"},
+        {"client_id": "C2", "annual_revenue": 3_000_000, "status": "Active"},
+    ])
+    assert avg_contract_value(df) == 2_000_000.0
+
+
+def test_avg_contract_value_empty_returns_zero():
+    df = pd.DataFrame(columns=["client_id", "annual_revenue", "status"])
+    assert avg_contract_value(df) == 0.0
+
+
+def test_clients_expiring_soon_filters_by_window():
+    today = date_type(2026, 5, 12)
+    df = pd.DataFrame([
+        {"client_id": "C1", "client_name": "A", "tier": "Platinum", "contract_type": "Retainer",
+         "annual_revenue": 500_000, "margin_pct": 0.35, "renewal_date": date_type(2026, 7, 1),
+         "last_contact_date": date_type(2026, 5, 1), "engagement_score": 80, "status": "Active"},
+        {"client_id": "C2", "client_name": "B", "tier": "Gold", "contract_type": "Retainer",
+         "annual_revenue": 200_000, "margin_pct": 0.30, "renewal_date": date_type(2026, 12, 1),
+         "last_contact_date": date_type(2026, 5, 1), "engagement_score": 65, "status": "Active"},
+    ])
+    result = clients_expiring_soon(df, days=90, today=today)
+    # C1 renewal is Jul 1 = 50 days from May 12 — within 90 days
+    # C2 renewal is Dec 1 = 203 days from May 12 — outside 90 days
+    assert len(result) == 1
+    assert result.iloc[0]["client_id"] == "C1"
+
+
+def test_revenue_at_risk_sums_expiring_revenue():
+    today = date_type(2026, 5, 12)
+    df = pd.DataFrame([
+        {"client_id": "C1", "client_name": "A", "tier": "Platinum", "contract_type": "Retainer",
+         "annual_revenue": 500_000, "margin_pct": 0.35, "renewal_date": date_type(2026, 7, 1),
+         "last_contact_date": date_type(2026, 5, 1), "engagement_score": 80, "status": "Active"},
+        {"client_id": "C2", "client_name": "B", "tier": "Gold", "contract_type": "Retainer",
+         "annual_revenue": 200_000, "margin_pct": 0.30, "renewal_date": date_type(2026, 12, 1),
+         "last_contact_date": date_type(2026, 5, 1), "engagement_score": 65, "status": "Active"},
+    ])
+    result = revenue_at_risk(df, days=90, today=today)
+    assert result == 500_000.0

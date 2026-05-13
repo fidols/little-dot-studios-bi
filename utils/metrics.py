@@ -283,3 +283,36 @@ def pricing_estimate(
         "total_cost": round(total_cost),
         "comparable_count": len(comparable),
     }
+
+
+def avg_contract_value(client_df: pd.DataFrame) -> float:
+    """Mean annual_revenue across all clients."""
+    if client_df.empty:
+        return 0.0
+    return float(client_df["annual_revenue"].mean())
+
+
+def clients_expiring_soon(
+    client_df: pd.DataFrame, days: int = 90, today=None
+) -> pd.DataFrame:
+    """
+    Clients whose renewal_date falls within `days` days from today (inclusive).
+    Returns the filtered subset of client_df (no extra columns).
+    """
+    from datetime import date as _date
+    if today is None:
+        today = _date(2026, 5, 12)
+    df = client_df.copy()
+    df["_renewal"] = pd.to_datetime(df["renewal_date"])
+    today_ts = pd.Timestamp(today)
+    cutoff = today_ts + pd.Timedelta(days=days)
+    mask = (df["_renewal"] >= today_ts) & (df["_renewal"] <= cutoff)
+    return df[mask].drop(columns=["_renewal"]).reset_index(drop=True)
+
+
+def revenue_at_risk(
+    client_df: pd.DataFrame, days: int = 90, today=None
+) -> float:
+    """Total annual_revenue of clients renewing within `days` days."""
+    expiring = clients_expiring_soon(client_df, days=days, today=today)
+    return float(expiring["annual_revenue"].sum())
