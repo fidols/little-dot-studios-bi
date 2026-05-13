@@ -42,3 +42,17 @@ a3.metric("FY2024 Operating Result", "-£30.8M", delta="-£30.8M")
 st.caption(
     "Source: All3Media FY2024 audited financials. First operating loss in recent history."
 )
+
+st.divider()
+
+# ── LDS Network KPIs ─────────────────────────────────────────────────────────
+st.subheader("LDS Network Scale")
+k1, k2, k3, k4 = st.columns(4)
+k1.metric("Total Revenue", "$257.7M")
+k2.metric("Employees", "419")
+k3.metric("Network Subscribers", "930M")
+k4.metric("Monthly Views", "11.2B")
+st.caption(
+    "Sources: ZoomInfo (revenue) · LeadIQ March 2026 (employees) · "
+    "LDS Whitepaper 2026 (subscribers, views)"
+)
