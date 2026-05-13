@@ -32,6 +32,7 @@ _Updated automatically on every ingest. Read this first when answering queries._
 | [LDS Revenue & Scale](source-lds-revenue-scale.md) | $257.7M revenue, 419 employees, 11B views/month, $100M+ Content ID earnings for partners |
 | [LDS Clients & Partnerships](source-lds-clients-partnerships.md) | Warner Bros., Disney, NBCUniversal, ZDF Studios, Cineverse, Acast, WING sports clients |
 | [LDS News 2026](source-lds-news-2026.md) | US expansion, new C-suite, podcast studio, growth phase signals |
+| [WING Clients & Work](source-wing-clients-work.md) | McLaren, F1, Olympics, IOC — what WING actually produces and why it's operationally complex |
 
 ## Synthesis
 _None yet — will be populated as queries and analyses are filed._
