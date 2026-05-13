@@ -20,8 +20,8 @@ def budget_variance_df(project_df: pd.DataFrame) -> pd.DataFrame:
         status: On Track / At Risk / Over Budget
     """
     df = project_df.copy()
-    df["pct_burned"] = df["actual_hours"] / df["estimated_hours"]
-    df["hours_over"] = (df["actual_hours"] - df["estimated_hours"]).clip(lower=0)
+    df["pct_burned"] = df["actual_hours"] / df["estimated_hours"].replace(0, float("nan"))
+    df["hours_over"] = (df["actual_hours"] - df["estimated_hours"]).clip(lower=0).fillna(0)
     df["status"] = df["pct_burned"].apply(
         lambda p: "Over Budget" if p > 1.0 else "At Risk" if p > 0.85 else "On Track"
     )
@@ -41,6 +41,8 @@ def gross_margin_pct(project_df: pd.DataFrame, offices: list = None) -> float:
 def avg_project_margin_pct(project_df: pd.DataFrame, offices: list = None) -> float:
     """Mean of per-project (revenue - actual_cost) / revenue."""
     df = project_df if offices is None else project_df[project_df["office"].isin(offices)]
+    if df["revenue"].sum() == 0:
+        return 0.0
     margins = (df["revenue"] - df["actual_cost"]) / df["revenue"].replace(0, float("nan"))
     return float(margins.mean())
 
