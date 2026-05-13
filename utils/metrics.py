@@ -123,11 +123,17 @@ def monthly_utilization_trend(
     """
     if timelog_df.empty:
         return pd.DataFrame(columns=["month", "office", "utilization_rate"])
+    # Employees not in employee_df get NaN office and are excluded from groupby results.
+    # In practice all employee_ids come from generate_employees() so this is not a data loss risk.
     df = timelog_df.merge(
         employee_df[["employee_id", "office"]], on="employee_id", how="left"
     )
     df["_date"] = pd.to_datetime(df["date"])
     df["month"] = df["_date"].dt.to_period("M").dt.to_timestamp()
+    cutoff = df["_date"].max() - pd.DateOffset(months=months)
+    df = df[df["_date"] >= cutoff]
+    if df.empty:
+        return pd.DataFrame(columns=["month", "office", "utilization_rate"])
     result = []
     for (month, office), group in df.groupby(["month", "office"]):
         total = group["hours"].sum()
