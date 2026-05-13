@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
-from datetime import date
 
+from data.simulate import TODAY
 from utils.metrics import (
     utilization_rate,
     billable_hours_this_month,
@@ -10,7 +10,7 @@ from utils.metrics import (
     monthly_utilization_trend,
 )
 
-TODAY = date(2026, 5, 12)
+_AVG_LOADED_COST_RATE = 75  # $/hr average loaded cost rate for cost impact estimates
 
 # ── Session state guard ───────────────────────────────────────────────────────
 if "data" not in st.session_state:
@@ -158,11 +158,17 @@ type_filter = col_type.multiselect(
     default=[],
 )
 
+# Build dept lookup BEFORE renaming (uses original column names)
+dept_to_projects = (
+    project_filtered.groupby("department")["project_name"]
+    .apply(set)
+    .to_dict()
+)
+
 filtered_table = display_df.copy()
 if dept_filter:
-    filtered_table = filtered_table[filtered_table["Project"].isin(
-        project_filtered[project_filtered["department"].isin(dept_filter)]["project_name"]
-    )]
+    allowed = set().union(*[dept_to_projects.get(d, set()) for d in dept_filter])
+    filtered_table = filtered_table[filtered_table["Project"].isin(allowed)]
 if type_filter:
     filtered_table = filtered_table[filtered_table["Type"].isin(type_filter)]
 
@@ -196,7 +202,7 @@ overrun_df = variance_df[variance_df["status"] == "Over Budget"].merge(
 if len(overrun_df) > 0:
     st.subheader(f"Overrun Alerts — {len(overrun_df)} Project(s) Over Budget")
     for _, row in overrun_df.iterrows():
-        cost_impact = round(row["hours_over"] * 75)  # approximate using avg loaded cost rate
+        cost_impact = round(row["hours_over"] * _AVG_LOADED_COST_RATE)
         st.warning(
             f"**{row['project_name']}** ({row['client_name']}) — "
             f"{int(row['hours_over'])} hours over estimate · "
